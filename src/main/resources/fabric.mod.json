@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "vortexmc",
+  "version": "${version}",
+  "name": "VortexMC",
+  "description": "A client-side performance dashboard for Minecraft: real frame-time monitoring, conservative graphics profiles, and a Smart Auto mode that measures before it claims anything.",
+  "authors": [
+    "Tech65pro"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Tech65pro/PXG",
+    "sources": "https://github.com/Tech65pro/PXG"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.tech65pro.vortexmc.VortexClient"
+    ],
+    "modmenu": [
+      "com.tech65pro.vortexmc.client.VortexModMenu"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-key-binding-api-v1": "*",
+    "fabric-lifecycle-events-v1": "*",
+    "fabric-rendering-v1": "*",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=21"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}

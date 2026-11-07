@@ -1,0 +1,136 @@
+plugins {
+    // VortexMC is written against Yarn mappings, so it needs the remapping Loom plugin.
+    // `net.fabricmc.fabric-loom-remap` is the current id; the bare `fabric-loom` id is
+    // legacy and scheduled for removal in Loom 2.0.
+    id 'net.fabricmc.fabric-loom-remap' version "${project.loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+    mavenCentral()
+    // ModMenu is published to TerraformersMC's maven, not to Fabric's maven and not to
+    // Maven Central. Without this repository the optional ModMenu integration below
+    // cannot resolve. ModMenu's own build.gradle confirms the coordinate.
+    maven { name = 'TerraformersMC'; url = 'https://maven.terraformersmc.com/' }
+}
+
+loom {
+    // Keep the run configurations small so the mod stays usable on low-end machines.
+    runs {
+        client {
+            client()
+            ideConfigGenerated = true
+            vmArg '-Xmx2G'
+        }
+    }
+
+    // Split sources: src/main/java holds the common (platform-free) code and
+    // src/client/java holds the client-only code.
+    //
+    // splitEnvironmentSourceSets() MUST be called explicitly. Loom does not detect
+    // src/client/java on its own: without it there is no "client" source set at all,
+    // src/client/java is never compiled, and the Fabric entrypoint class
+    // com.tech65pro.vortexmc.VortexClient would be missing from the jar, which makes
+    // Fabric Loader fail at startup.
+    //
+    // The mods block tells Loom which source sets belong to this mod so that the
+    // dev run configuration puts both outputs on the classpath.
+    splitEnvironmentSourceSets()
+
+    mods {
+        "vortexmc" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API modules that VortexMC actually uses. Declaring the individual modules
+    // instead of the whole `fabric-api` bundle keeps the dependency graph small.
+    modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:${project.fabric_api_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-lifecycle-events-v1:${project.fabric_api_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-rendering-v1:${project.fabric_api_version}"
+
+    // Optional integration hooks. These are compileOnly + runtime-only-when-present so
+    // VortexMC never requires them.
+    compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+    runtimeOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+}
+
+processResources {
+    inputs.property 'version', project.version
+    inputs.property 'minecraft_version', project.minecraft_version
+    inputs.property 'loader_version', project.loader_version
+
+    filesMatching('fabric.mod.json') {
+        expand(
+            'version': project.version,
+            'minecraft_version': project.minecraft_version,
+            'loader_version': project.loader_version
+        )
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = 'UTF-8'
+    it.options.release = 21
+}
+
+tasks.withType(Javadoc).configureEach {
+    it.options.encoding = 'UTF-8'
+}
+
+jar {
+    from('LICENSE') {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Tests
+//
+// The common source set (src/main/java) is deliberately free of Minecraft, Fabric
+// and Gson dependencies, so it can be unit-tested with nothing but a JRE. The
+// client source set is not unit-tested: it needs a running game, and the value of
+// a test that cannot run is negative.
+// ---------------------------------------------------------------------------
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// Convenience: print the client compile classpath so IDE setup can be checked
+// without a full configuration run.
+tasks.register('printClasspath') {
+    doLast {
+        println sourceSets.client.compileClasspath.asPath
+    }
+}

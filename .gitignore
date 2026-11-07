@@ -1,0 +1,34 @@
+# Gradle / build output
+.gradle/
+out/
+run/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+*.hprof
+hs_err_pid*.log
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# macOS
+.DS_Store
+
+# Local secrets / machine specific files
+local.properties
+
+# Build output is ignored, with one deliberate exception: build/libs holds the jar produced by
+# tools/offline-build.sh. This environment cannot run Loom, so that jar is the only build artefact
+# that can be produced here and it is committed so it survives. It is NOT the Loom-remapped,
+# installable release jar; see build/libs/README.txt and README.md.
+build/*
+!build/libs/
+!build/libs/*
+
+# stray extraction from tools/real-build.sh
+mappings/

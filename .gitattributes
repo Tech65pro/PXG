@@ -1,0 +1,15 @@
+# Gradle's Windows launcher must keep CRLF or cmd.exe mis-parses its goto labels.
+*.bat text eol=crlf
+
+# Everything else is LF.
+*.sh text eol=lf
+gradlew text eol=lf
+*.properties text eol=lf
+*.gradle text eol=lf
+*.java text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Binary.
+*.jar binary
+*.zip binary
